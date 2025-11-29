@@ -1,0 +1,42 @@
+services:
+  web:
+    container_name: eva_final_py
+    hostname: eva_final
+    ports:
+      - "8080:5000"
+    build: ./web
+    environment:
+      - DB_HOST=gultro
+      - DB_PORT=3306
+      - DB_NAME=contador_final
+      - DB_USER=user
+      - DB_PASSWORD=pass
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db:
+    container_name: gultro
+    image: mysql:8.0
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./web/db/initdb,d/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: contador_final
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -uroot -proot || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db_data:
